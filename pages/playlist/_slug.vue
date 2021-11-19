@@ -5,10 +5,13 @@
         <img src="/logo.png" />
       </a>
       <div class="mt-8 bg-white overflow-hidden shadow sm:rounded-lg p-6">
-        <div>
+        <div class="flex justify-center flex-col gap-4">
           <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="button" v-on:click="copyURL">
             Copy link and share to your friends
           </button>
+          <a class="bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline text-center" type="button" :href="`/playlist/add_on/${this.$route.params.slug}`">
+            Add myself to the playlist
+          </a>
         </div>
       </div>
       <div class="mt-8 bg-white shadow sm:rounded-lg p-6">
@@ -19,7 +22,7 @@
           Nothing to show here!
         </div>
         <div class="grid grid-cols-3 gap-2 justify-items-center">
-          <div v-for="user in users" :key="user" class="bg-black hover:bg-red-500 text-white font-bold p-2 rounded cursor-pointer">{{user}}</div>
+          <div v-for="user in users" :key="user" class="bg-black hover:bg-red-500 text-white font-bold p-2 rounded cursor-pointer">{{user.name}}</div>
         </div>
       </div>
       <div class="mt-8 bg-white shadow sm:rounded-lg p-6 flex justify-center">

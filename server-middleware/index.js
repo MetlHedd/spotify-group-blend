@@ -182,7 +182,10 @@ app.get('/playlist/new', (req, res) => {
     spotifyApi.setRefreshToken(storedRefreshToken)
 
     spotifyApi.getMe().then(data => {
-      playlists[playlistId][storedAcessToken] = data.body.display_name
+      playlists[playlistId][storedAcessToken] = {
+        name: data.body.display_name,
+        refresh_token: storedRefreshToken
+      }
     })
 
     res.redirect('/playlist/' + playlistId)
@@ -232,7 +235,10 @@ app.get('/playlist/add_on/:id', (req, res) => {
         spotifyApi.setRefreshToken(storedRefreshToken)
     
         spotifyApi.getMe().then(data => {
-          playlists[playlistId][storedAcessToken] = data.body.display_name
+          playlists[playlistId][storedAcessToken] = {
+            name: data.body.display_name,
+            refresh_token: storedRefreshToken
+          }
         })
       }
 

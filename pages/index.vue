@@ -6,11 +6,6 @@
       </a>
       <div class="mt-8 bg-white overflow-hidden shadow sm:rounded-lg p-6 flex flex-col gap-4 justify-center">
         <div class="flex justify-center">
-          <a class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" href="/auth/spotify/">
-            Login with Spotify
-          </a>
-        </div>
-        <div class="flex justify-center">
           <a class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" href="/playlist/new/">
             New Playlist
           </a>
