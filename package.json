@@ -12,8 +12,15 @@
   },
   "dependencies": {
     "@nuxtjs/axios": "^5.13.6",
+    "axios": "^0.24.0",
+    "cookie-parser": "^1.4.6",
     "core-js": "^3.15.1",
-    "nuxt": "^2.2.0"
+    "cors": "^2.8.5",
+    "dotenv": "^10.0.0",
+    "express": "^4.17.1",
+    "nuxt": "^2.2.0",
+    "query-string": "^7.0.1",
+    "spotify-web-api-node": "^5.0.2"
   },
   "devDependencies": {
     "@babel/eslint-parser": "^7.14.7",
