@@ -1,4 +1,4 @@
-const express  = require('express')
+const express = require('express')
 const axios = require('axios')
 const queryString = require('query-string')
 const cookieParser = require('cookie-parser')
@@ -7,7 +7,7 @@ const SpotifyWebApi = require('spotify-web-api-node');
 require('dotenv').config()
 
 /**
- * 
+ *
  */
 const playlists = {}
 
@@ -26,9 +26,9 @@ const client_secret = process.env.client_secret || ''
 const redirect_uri = 'http://localhost:3000/auth/spotify/callback'
 
 /**
- * 
- * @param {*} length 
- * @returns 
+ *
+ * @param {*} length
+ * @returns
  */
 function generateRandomString(length) {
   var text = ''
@@ -73,7 +73,7 @@ app.get('/auth/spotify/callback', (req, res) => {
     res.redirect('/#' +
       queryString.stringify({
         error: 'state_mismatch'
-    }))
+      }))
   } else {
     res.clearCookie('spotify_auth_state')
 
@@ -107,15 +107,15 @@ app.get('/auth/spotify/callback', (req, res) => {
         res.redirect(storedRedirect)
         res.clearCookie('redirect')
       }
-      //res.send(response.data)
+      res.send(response.data)
     })
-    .catch((error) => {
-      console.log(error)
-
-      res.send({
-        status: 'error'
+      .catch((error) => {
+        console.log(error)
+        console.log("##############################")
+        res.send({
+          status: 'error'
+        })
       })
-    })
   }
 })
 
@@ -142,7 +142,7 @@ app.get('/refresh_token', (req, res) => {
       res.send(response.data)
     }
   })
-  
+
   res.send('error')
 })
 
@@ -212,6 +212,7 @@ app.get('/playlist/add_on/:id', (req, res) => {
   const storedAcessToken = req.cookies ? req.cookies['access_token'] : null
   const storedRefreshToken = req.cookies ? req.cookies['refresh_token'] : null
 
+
   if (storedAcessToken == null || storedRefreshToken == null) {
     res.cookie('redirect', '/playlist/add_on/' + req.params.id)
     res.redirect('/auth/spotify/')
@@ -233,7 +234,7 @@ app.get('/playlist/add_on/:id', (req, res) => {
         })
         spotifyApi.setAccessToken(storedAcessToken)
         spotifyApi.setRefreshToken(storedRefreshToken)
-    
+
         spotifyApi.getMe().then(data => {
           playlists[playlistId][storedAcessToken] = {
             name: data.body.display_name,
@@ -247,8 +248,37 @@ app.get('/playlist/add_on/:id', (req, res) => {
   }
 })
 
-app.get('/playlist/generate/:id', (req, res) => {
-
+app.get('/playlist/generate/:id', async (req, res) => {
+  const storedAcessToken = req.cookies ? req.cookies['access_token'] : null
+  const storedRefreshToken = req.cookies ? req.cookies['refresh_token'] : null
+  if (storedAcessToken == null || storedRefreshToken == null) {
+    res.cookie('redirect', '/playlist/generate/' + req.params.id)
+    res.redirect('/auth/spotify/')
+  } else {
+    const spotifyApi = new SpotifyWebApi({
+      clientId: client_id,
+      clientSecret: client_secret,
+    })
+    try {
+      spotifyApi.setAccessToken(storedAcessToken)
+      spotifyApi.setRefreshToken(storedRefreshToken)
+      const data = await spotifyApi.getMyTopTracks()
+      console.log(data)
+      const topArtists = data.body.items;
+      console.log(topArtists);
+      res.send({
+        status: 'ok',
+      })
+    } catch (err) {
+      console.log('################################')
+      console.log(err.message);
+      console.log(err)
+      res.send({
+        status: 'error',
+        error: err,
+      })
+    }
+  }
 })
 
 /**

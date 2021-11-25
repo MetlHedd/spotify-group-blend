@@ -6,10 +6,10 @@
       </a>
       <div class="mt-8 bg-white overflow-hidden shadow sm:rounded-lg p-6">
         <div class="flex justify-center flex-col gap-4">
-          <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="button" v-on:click="copyURL">
+          <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="button" @click="copyURL">
             Copy link and share to your friends
           </button>
-          <a class="bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline text-center" type="button" :href="`/playlist/add_on/${this.$route.params.slug}`">
+          <a class="bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline text-center" type="button" :href="`/playlist/add_on/${$route.params.slug}`">
             Add myself to the playlist
           </a>
         </div>
@@ -26,7 +26,7 @@
         </div>
       </div>
       <div class="mt-8 bg-white shadow sm:rounded-lg p-6 flex justify-center">
-        <button class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="button">
+        <button class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="button" @click="generateBlend">
           Generate group blend
         </button>
       </div>
@@ -55,7 +55,7 @@ export default {
   },
   methods: {
     generateBlend() {
-      axios.post(`/playlist/generate/${this.$route.params.slug}`)
+      axios.get(`/playlist/generate/${this.$route.params.slug}`)
         .then(res => {
           if (res.data.status === 'ok') {
             this.$router.push(`/playlist/${this.$route.params.slug}`)
