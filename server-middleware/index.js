@@ -180,18 +180,14 @@ app.get('/playlist/new', async (req, res) => {
     spotifyApi.setAccessToken(storedAcessToken)
     spotifyApi.setRefreshToken(storedRefreshToken)
 
-    const top_tracks_options = {
-      limit: 50,
-      time_range: 'medium_term',
-      offset: 0
-    }
     try {
-      let top_tracks = (await spotifyApi.getMyTopTracks(top_tracks_options)).body.items;
+      const [topTracks, tracksFeatures] = await getTopTracks(spotifyApi)
       let me = (await spotifyApi.getMe()).body
       playlists[playlistId][storedAcessToken] = {
         name: me.display_name,
         refresh_token: storedRefreshToken,
-        top_tracks: top_tracks
+        top_tracks: topTracks,
+        tracks_features: tracksFeatures
       }
     } catch (err) {
       res.send({
@@ -245,19 +241,14 @@ app.get('/playlist/add_on/:id', async (req, res) => {
         spotifyApi.setAccessToken(storedAcessToken)
         spotifyApi.setRefreshToken(storedRefreshToken)
 
-        const top_tracks_options = {
-          limit: 50,
-          time_range: 'medium_term',
-          offset: 0
-        }
-
         try {
-          let top_tracks = (await spotifyApi.getMyTopTracks(top_tracks_options)).body.items;
+          const [topTracks, tracksFeatures] = await getTopTracks(spotifyApi)
           let me = (await spotifyApi.getMe()).body
           playlists[playlistId][storedAcessToken] = {
             name: me.display_name,
             refresh_token: storedRefreshToken,
-            top_tracks: top_tracks
+            top_tracks: topTracks,
+            tracks_features: tracksFeatures
           }
         } catch (err) {
           res.send({
@@ -291,11 +282,11 @@ app.get('/playlist/generate/:id', async (req, res) => {
     try {
       const playlistId = req.params.id
       let allTracks = []
+      let tracksFeatures = []
       new Map(Object.entries(playlists[playlistId])).forEach((playlistUser) => {
         allTracks.push.apply(allTracks, playlistUser.top_tracks)
+        tracksFeatures.push.apply(tracksFeatures, playlistUser.tracks_features)
       })
-      console.log(allTracks.length)
-      console.log(allTracks[0])
       res.send({
         status: 'ok'
       })
@@ -307,6 +298,25 @@ app.get('/playlist/generate/:id', async (req, res) => {
     }
   }
 })
+
+async function getTopTracks(spotifyApi) {
+
+  const topTracksOptions = {
+    limit: 50,
+    time_range: 'medium_term',
+    offset: 0
+  }
+
+  const topTracks = (await spotifyApi.getMyTopTracks(topTracksOptions)).body.items;
+  let tracksIds = []
+  topTracks.forEach((track) => {
+    tracksIds.push(track.id)
+  })
+
+  const tracksFeatures = (await spotifyApi.getAudioFeaturesForTracks(tracksIds)).body.audio_features
+
+  return [topTracks, tracksFeatures]
+}
 
 /**
  * Export app
