@@ -310,6 +310,8 @@ app.get('/playlist/generate/:id', (req, res) => {
     try {
       const playlistId = req.params.id
       console.log(playlists[playlistId])
+      // Iterar pelos el da playlist e pegar as top_tracks de cada user
+      // Usar a api do spotify pra pegar as infos de cada musica
       res.send({
         status: 'ok'
       })
