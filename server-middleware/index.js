@@ -300,21 +300,17 @@ app.get('/playlist/generate/:id', async (req, res) => {
 })
 
 async function getTopTracks(spotifyApi) {
-
   const topTracksOptions = {
     limit: 50,
     time_range: 'medium_term',
     offset: 0
   }
-
   const topTracks = (await spotifyApi.getMyTopTracks(topTracksOptions)).body.items;
   let tracksIds = []
   topTracks.forEach((track) => {
     tracksIds.push(track.id)
   })
-
   const tracksFeatures = (await spotifyApi.getAudioFeaturesForTracks(tracksIds)).body.audio_features
-
   return [topTracks, tracksFeatures]
 }
 
