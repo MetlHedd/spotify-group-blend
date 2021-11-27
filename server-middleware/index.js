@@ -45,7 +45,7 @@ function generateRandomString(length) {
  * Spotify Login routes
  */
 app.get('/auth/spotify/', (req, res) => {
-  const scope = 'user-read-private user-read-email'
+  const scope = 'user-read-private user-read-email user-top-read'
   const state = generateRandomString(16)
 
   res.cookie('spotify_auth_state', state)
@@ -181,10 +181,32 @@ app.get('/playlist/new', (req, res) => {
     spotifyApi.setAccessToken(storedAcessToken)
     spotifyApi.setRefreshToken(storedRefreshToken)
 
+    let top_tracks = []
+
+    const top_tracks_options = {
+      limit: 50,
+      time_range: 'medium_term',
+      offset: 0
+    }
+
+    spotifyApi.getMyTopTracks(top_tracks_options).then((data) => {
+      const topArtists = data.body.items;
+      topArtists.forEach((currentTrack) => {
+        top_tracks.push(currentTrack.id)
+      })
+    }, (err) => {
+      res.send({
+        status: 'error',
+        error: err,
+      })
+    })
+
+
     spotifyApi.getMe().then(data => {
       playlists[playlistId][storedAcessToken] = {
         name: data.body.display_name,
-        refresh_token: storedRefreshToken
+        refresh_token: storedRefreshToken,
+        top_tracks: top_tracks
       }
     })
 
@@ -226,7 +248,7 @@ app.get('/playlist/add_on/:id', (req, res) => {
       })
     } else {
 
-      if (!(storedAcessToken in playlists[playlistId])) {
+      if (playlists[playlistId][storedAcessToken] == null) {
         const spotifyApi = new SpotifyWebApi({
           clientId: client_id,
           clientSecret: client_secret,
@@ -235,10 +257,31 @@ app.get('/playlist/add_on/:id', (req, res) => {
         spotifyApi.setAccessToken(storedAcessToken)
         spotifyApi.setRefreshToken(storedRefreshToken)
 
+        let top_tracks = []
+
+        const top_tracks_options = {
+          limit: 50,
+          time_range: 'medium_term',
+          offset: 0
+        }
+
+        spotifyApi.getMyTopTracks(top_tracks_options).then((data) => {
+          const topArtists = data.body.items;
+          topArtists.forEach((currentTrack) => {
+            top_tracks.push(currentTrack.id)
+          })
+        }, (err) => {
+          res.send({
+            status: 'error',
+            error: err,
+          })
+        })
+
         spotifyApi.getMe().then(data => {
           playlists[playlistId][storedAcessToken] = {
             name: data.body.display_name,
-            refresh_token: storedRefreshToken
+            refresh_token: storedRefreshToken,
+            top_tracks: top_tracks
           }
         })
       }
@@ -248,9 +291,10 @@ app.get('/playlist/add_on/:id', (req, res) => {
   }
 })
 
-app.get('/playlist/generate/:id', async (req, res) => {
+app.get('/playlist/generate/:id', (req, res) => {
   const storedAcessToken = req.cookies ? req.cookies['access_token'] : null
   const storedRefreshToken = req.cookies ? req.cookies['refresh_token'] : null
+
   if (storedAcessToken == null || storedRefreshToken == null) {
     res.cookie('redirect', '/playlist/generate/' + req.params.id)
     res.redirect('/auth/spotify/')
@@ -259,20 +303,17 @@ app.get('/playlist/generate/:id', async (req, res) => {
       clientId: client_id,
       clientSecret: client_secret,
     })
+
+    spotifyApi.setAccessToken(storedAcessToken)
+    spotifyApi.setRefreshToken(storedRefreshToken)
+
     try {
-      spotifyApi.setAccessToken(storedAcessToken)
-      spotifyApi.setRefreshToken(storedRefreshToken)
-      const data = await spotifyApi.getMyTopTracks()
-      console.log(data)
-      const topArtists = data.body.items;
-      console.log(topArtists);
+      const playlistId = req.params.id
+      console.log(playlists[playlistId])
       res.send({
-        status: 'ok',
+        status: 'ok'
       })
     } catch (err) {
-      console.log('################################')
-      console.log(err.message);
-      console.log(err)
       res.send({
         status: 'error',
         error: err,
