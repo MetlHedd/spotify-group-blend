@@ -23,7 +23,7 @@ app.use(cookieParser())
  */
 const client_id = process.env.client_id || ''
 const client_secret = process.env.client_secret || ''
-const redirect_uri = 'http://localhost:3000/auth/spotify/callback'
+const redirect_uri = Buffer.from(process.env.redirect_uri_base64 || '', 'base64').toString()
 
 /**
  *
@@ -156,59 +156,15 @@ app.get('/playlist/new', async (req, res) => {
     res.cookie('redirect', '/playlist/new')
     res.redirect('/auth/spotify/')
   } else {
-    const playlistId = generateRandomString(16)
+    let playlistId = generateRandomString(16)
 
-    while (playlists[playlistId] != null) {
+    while (playlistId in playlists)
       playlistId = generateRandomString(16)
-    }
-
-    playlists[playlistId] = {}
-
-    // Get user name
-    const options = {
-      url: 'https://api.spotify.com/v1/me',
-      headers: { 'Authorization': 'Bearer ' + storedAcessToken },
-      json: true
-    }
-
-    const spotifyApi = new SpotifyWebApi({
-      clientId: client_id,
-      clientSecret: client_secret,
-      redirectUri: redirect_uri
-    })
-
-    spotifyApi.setAccessToken(storedAcessToken)
-    spotifyApi.setRefreshToken(storedRefreshToken)
-
-    try {
-      const [topTracks, tracksFeatures] = await getTopTracks(spotifyApi)
-          let tracks = []
-          let me = (await spotifyApi.getMe()).body
-
-          for (let i = 0; i < topTracks.length; i++) {
-            tracks.push({
-              from_id: me.id,
-              from_name: me.display_name,
-              track: topTracks[i],
-              features: tracksFeatures[i]
-            })
-          }
-
-          playlists[playlistId][storedAcessToken] = {
-            name: me.display_name,
-            refresh_token: storedRefreshToken,
-            top_tracks: tracks
-          }
-    } catch (err) {
-      res.send({
-        status: 'error',
-        error: err,
-      })
-    }
+    
+    addUserOnPlaylist(storedAcessToken, storedRefreshToken, playlistId)
 
     res.redirect('/playlist/' + playlistId)
   }
-
 })
 
 app.get('/playlist/has/:id', (req, res) => {
@@ -236,49 +192,17 @@ app.get('/playlist/add_on/:id', async (req, res) => {
     res.redirect('/auth/spotify/')
   } else {
     const playlistId = req.params.id
+
     if (playlists[playlistId] == null) {
       res.send({
         status: 'error',
         error: 'No playlist'
       })
-    } else {
-      if (playlists[playlistId][storedAcessToken] == null) {
-        const spotifyApi = new SpotifyWebApi({
-          clientId: client_id,
-          clientSecret: client_secret,
-          redirectUri: redirect_uri
-        })
-        spotifyApi.setAccessToken(storedAcessToken)
-        spotifyApi.setRefreshToken(storedRefreshToken)
-
-        try {
-          const [topTracks, tracksFeatures] = await getTopTracks(spotifyApi)
-          let tracks = []
-          let me = (await spotifyApi.getMe()).body
-
-          for (let i = 0; i < topTracks.length; i++) {
-            tracks.push({
-              from_id: me.id,
-              from_name: me.display_name,
-              track: topTracks[i],
-              features: tracksFeatures[i]
-            })
-          }
-
-          playlists[playlistId][storedAcessToken] = {
-            name: me.display_name,
-            refresh_token: storedRefreshToken,
-            top_tracks: tracks
-          }
-        } catch (err) {
-          res.send({
-            status: 'error',
-            error: err,
-          })
-        }
-      }
-      res.redirect('/playlist/' + playlistId)
+    } else if(!isUserOnPlaylist(storedAcessToken, storedRefreshToken, playlistId)) {
+      addUserOnPlaylist(storedAcessToken, storedRefreshToken, playlistId)
     }
+
+    res.redirect('/playlist/' + playlistId)
   }
 })
 
@@ -334,6 +258,69 @@ async function getTopTracks(spotifyApi) {
   return [topTracks, tracksFeatures]
 }
 
+async function isUserOnPlaylist(access_token, refresh_token, playlistId) {
+  const spotifyApi = new SpotifyWebApi({
+    clientId: client_id,
+    clientSecret: client_secret,
+    redirectUri: redirect_uri
+  })
+
+  spotifyApi.setAccessToken(access_token)
+  spotifyApi.setRefreshToken(refresh_token)
+
+  try {
+    const me = (await spotifyApi.getMe()).body
+    
+    if (playlists[playlistId] == null)
+      return false
+    if (playlists[playlistId][me.id] == null)
+      return false
+
+  } catch (err) {
+    return false
+  }
+
+  return true
+}
+
+async function addUserOnPlaylist(acess_token, refresh_token, playlistId) {
+  const spotifyApi = new SpotifyWebApi({
+    clientId: client_id,
+    clientSecret: client_secret,
+    redirectUri: redirect_uri
+  })
+
+  spotifyApi.setAccessToken(acess_token)
+  spotifyApi.setRefreshToken(refresh_token)
+
+  try {
+    const me = (await spotifyApi.getMe()).body
+    if (playlists[playlistId] == null)
+      playlists[playlistId] = {}
+    
+    if (playlists[playlistId][me.id] == null) {
+      const [topTracks, tracksFeatures] = await getTopTracks(spotifyApi)
+      let tracks = []
+
+      for (let i = 0; i < topTracks.length; i++) {
+        tracks.push({
+          from_id: me.id,
+          from_name: me.display_name,
+          track: topTracks[i],
+          features: tracksFeatures[i]
+        })
+      }
+
+      playlists[playlistId][me.id] = {
+        name: me.display_name,
+        refresh_token: refresh_token,
+        top_tracks: tracks
+      }
+    }
+  } catch (err) {
+    console.log(err)
+  }
+}
 /**
  * Export app
  */
