@@ -103,6 +103,8 @@ app.get('/auth/spotify/callback', (req, res) => {
 
       if (storedRedirect == null) {
         res.redirect('/#login_sucessful')
+
+        return
       } else {
         res.redirect(storedRedirect)
         res.clearCookie('redirect')
@@ -139,6 +141,8 @@ app.get('/refresh_token', (req, res) => {
   }).then(response => {
     if (response.status === 200) {
       res.send(response.data)
+
+      return
     }
   })
 
@@ -198,9 +202,11 @@ app.get('/playlist/add_on/:id', async (req, res) => {
         status: 'error',
         error: 'No playlist'
       })
-    } else if(!isUserOnPlaylist(storedAcessToken, storedRefreshToken, playlistId)) {
-      addUserOnPlaylist(storedAcessToken, storedRefreshToken, playlistId)
+
+      return
     }
+
+    addUserOnPlaylist(storedAcessToken, storedRefreshToken, playlistId)
 
     res.redirect('/playlist/' + playlistId)
   }
@@ -256,31 +262,6 @@ async function getTopTracks(spotifyApi) {
   })
   const tracksFeatures = (await spotifyApi.getAudioFeaturesForTracks(tracksIds)).body.audio_features
   return [topTracks, tracksFeatures]
-}
-
-async function isUserOnPlaylist(access_token, refresh_token, playlistId) {
-  const spotifyApi = new SpotifyWebApi({
-    clientId: client_id,
-    clientSecret: client_secret,
-    redirectUri: redirect_uri
-  })
-
-  spotifyApi.setAccessToken(access_token)
-  spotifyApi.setRefreshToken(refresh_token)
-
-  try {
-    const me = (await spotifyApi.getMe()).body
-    
-    if (playlists[playlistId] == null)
-      return false
-    if (playlists[playlistId][me.id] == null)
-      return false
-
-  } catch (err) {
-    return false
-  }
-
-  return true
 }
 
 async function addUserOnPlaylist(acess_token, refresh_token, playlistId) {
