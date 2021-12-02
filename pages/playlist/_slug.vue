@@ -49,7 +49,7 @@ export default {
         if (res.data.status === 'ok') {
           this.users = res.data.users
         } else {
-          this.$router.push('/')
+          this.$router.push('/#playlist_not_found')
         }
       })
   },
@@ -60,7 +60,7 @@ export default {
           if (res.data.status === 'ok') {
             this.$router.push(`/playlist/${this.$route.params.slug}`)
           } else {
-            this.$router.push('/')
+            this.$router.push('/#generator_error')
           }
         })
     },

@@ -165,7 +165,13 @@ app.get('/playlist/new', async (req, res) => {
     while (playlistId in playlists)
       playlistId = generateRandomString(16)
     
-    addUserOnPlaylist(storedAcessToken, storedRefreshToken, playlistId)
+    try {
+      await addUserOnPlaylist(storedAcessToken, storedRefreshToken, playlistId)
+    } catch(er) {
+      res.redirect('/#playlist_new_error')
+
+      return
+    }
 
     res.redirect('/playlist/' + playlistId)
   }
@@ -206,7 +212,13 @@ app.get('/playlist/add_on/:id', async (req, res) => {
       return
     }
 
-    addUserOnPlaylist(storedAcessToken, storedRefreshToken, playlistId)
+    try {
+      await addUserOnPlaylist(storedAcessToken, storedRefreshToken, playlistId)
+    } catch(er) {
+      res.redirect('/#playlist_add_on_error')
+
+      return
+    }
 
     res.redirect('/playlist/' + playlistId)
   }
