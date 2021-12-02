@@ -182,13 +182,23 @@ app.get('/playlist/new', async (req, res) => {
 
     try {
       const [topTracks, tracksFeatures] = await getTopTracks(spotifyApi)
-      let me = (await spotifyApi.getMe()).body
-      playlists[playlistId][storedAcessToken] = {
-        name: me.display_name,
-        refresh_token: storedRefreshToken,
-        top_tracks: topTracks,
-        tracks_features: tracksFeatures
-      }
+          let tracks = []
+          let me = (await spotifyApi.getMe()).body
+
+          for (let i = 0; i < topTracks.length; i++) {
+            tracks.push({
+              from_id: me.id,
+              from_name: me.display_name,
+              track: topTracks[i],
+              features: tracksFeatures[i]
+            })
+          }
+
+          playlists[playlistId][storedAcessToken] = {
+            name: me.display_name,
+            refresh_token: storedRefreshToken,
+            top_tracks: tracks
+          }
     } catch (err) {
       res.send({
         status: 'error',
@@ -243,12 +253,22 @@ app.get('/playlist/add_on/:id', async (req, res) => {
 
         try {
           const [topTracks, tracksFeatures] = await getTopTracks(spotifyApi)
+          let tracks = []
           let me = (await spotifyApi.getMe()).body
+
+          for (let i = 0; i < topTracks.length; i++) {
+            tracks.push({
+              from_id: me.id,
+              from_name: me.display_name,
+              track: topTracks[i],
+              features: tracksFeatures[i]
+            })
+          }
+
           playlists[playlistId][storedAcessToken] = {
             name: me.display_name,
             refresh_token: storedRefreshToken,
-            top_tracks: topTracks,
-            tracks_features: tracksFeatures
+            top_tracks: tracks
           }
         } catch (err) {
           res.send({
@@ -282,13 +302,13 @@ app.get('/playlist/generate/:id', async (req, res) => {
     try {
       const playlistId = req.params.id
       let allTracks = []
-      let tracksFeatures = []
       new Map(Object.entries(playlists[playlistId])).forEach((playlistUser) => {
         allTracks.push.apply(allTracks, playlistUser.top_tracks)
-        tracksFeatures.push.apply(tracksFeatures, playlistUser.tracks_features)
       })
+
       res.send({
-        status: 'ok'
+        status: 'ok',
+        allTracks: allTracks,
       })
     } catch (err) {
       res.send({
