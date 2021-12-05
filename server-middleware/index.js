@@ -191,7 +191,7 @@ app.get('/playlist/has/:id', (req, res) => {
   if (playlists[playlistId] != null) {
     res.send({
       status: 'ok',
-      users: p
+      users: users
     })
   } else {
     res.send({
