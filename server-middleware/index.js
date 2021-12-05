@@ -179,11 +179,19 @@ app.get('/playlist/new', async (req, res) => {
 
 app.get('/playlist/has/:id', (req, res) => {
   const playlistId = req.params.id
+  const users = {}
+  let i = 0
+
+  for (const user in playlists[playlistId]) {
+    users[i] = {
+      name: playlists[playlistId].name
+    }
+  }
 
   if (playlists[playlistId] != null) {
     res.send({
       status: 'ok',
-      users: playlists[playlistId]
+      users: p
     })
   } else {
     res.send({
