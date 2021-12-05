@@ -184,7 +184,7 @@ app.get('/playlist/has/:id', (req, res) => {
 
   for (const user in playlists[playlistId]) {
     users[i] = {
-      name: playlists[playlistId].name
+      name: playlists[playlistId][user].name
     }
   }
 
