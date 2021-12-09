@@ -1,4 +1,6 @@
 from http.server import HTTPServer, BaseHTTPRequestHandler
+from data_processor import runGeneratePlaylist
+import json
 
 tracks = []
 playlist = []
@@ -53,11 +55,16 @@ class dataHandler(BaseHTTPRequestHandler):
             # Envio dos Dados
             length = int(self.headers['content-length'])
             post_data = self.rfile.read(length)
-            tracks.append(post_data)
+            
+            parsed_data = json.loads(post_data)
+            #tracks.append(parsed_data)
+            l = runGeneratePlaylist(parsed_data)
+            print(l)
 
             self.send_response(201)
             self.send_header('content-type', 'application/json')
             self.end_headers()
+
         elif(self.path.endswith('/playlist')):
             # Retorno da Playlist
             length = int(self.headers['content-length'])
@@ -67,13 +74,12 @@ class dataHandler(BaseHTTPRequestHandler):
             self.send_response(201)
             self.send_header('content-type', 'application/json')
             self.end_headers()
+
         # Rota Inexistente
         else:
             self.send_error(404)
             self.send_header('content-type', 'raw')
             self.wfile.write('Rota inexistente')
-
-
 
 # Main
 try:
