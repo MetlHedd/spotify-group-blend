@@ -23,7 +23,8 @@ app.use(cookieParser())
  */
 const client_id = process.env.client_id || ''
 const client_secret = process.env.client_secret || ''
-const redirect_uri = Buffer.from(process.env.redirect_uri_base64 || '', 'base64').toString()
+const redirect_uri = 'http://localhost:3000/auth/spotify/callback'
+// const redirect_uri = Buffer.from(process.env.redirect_uri_base64 || '', 'base64').toString()
 
 /**
  *
@@ -45,7 +46,7 @@ function generateRandomString(length) {
  * Spotify Login routes
  */
 app.get('/auth/spotify/', (req, res) => {
-  const scope = 'user-read-private user-read-email user-top-read'
+  const scope = 'user-read-private user-read-email user-top-read playlist-modify-public playlist-modify-private'
   const state = generateRandomString(16)
 
   res.cookie('spotify_auth_state', state)
@@ -164,10 +165,10 @@ app.get('/playlist/new', async (req, res) => {
 
     while (playlistId in playlists)
       playlistId = generateRandomString(16)
-    
+
     try {
       await addUserOnPlaylist(storedAcessToken, storedRefreshToken, playlistId)
-    } catch(er) {
+    } catch (er) {
       res.redirect('/#playlist_new_error')
 
       return
@@ -222,7 +223,7 @@ app.get('/playlist/add_on/:id', async (req, res) => {
 
     try {
       await addUserOnPlaylist(storedAcessToken, storedRefreshToken, playlistId)
-    } catch(er) {
+    } catch (er) {
       res.redirect('/#playlist_add_on_error')
 
       return
@@ -256,11 +257,31 @@ app.get('/playlist/generate/:id', async (req, res) => {
         allTracks.push.apply(allTracks, playlistUser.top_tracks)
       })
 
+      // TODO: Enviar lista para o backend e retornar lista com as urls
+      let tracksResponse = ["spotify:track:5yKXn2WXISKovZSzczhBI9", "spotify:track:1M3XB6EUPUZy58Aqt6zbKr"]
+
+      let playlistInfo = await spotifyApi.createPlaylist(
+        `group_blend_${playlistId}`,
+        {
+          'description': 'Spotify Group Blend',
+          'public': true,
+        }
+      );
+
+      await spotifyApi.addTracksToPlaylist(
+        playlistInfo['body']['id'],
+        tracksResponse,
+      )
+
+      // TODO: O link da playlist é esse
+      console.log(playlistInfo['body']['external_urls']['spotify'])
+
       res.send({
         status: 'ok',
         allTracks: allTracks,
       })
     } catch (err) {
+      console.log(err)
       res.send({
         status: 'error',
         error: err,
@@ -298,7 +319,7 @@ async function addUserOnPlaylist(acess_token, refresh_token, playlistId) {
     const me = (await spotifyApi.getMe()).body
     if (playlists[playlistId] == null)
       playlists[playlistId] = {}
-    
+
     if (playlists[playlistId][me.id] == null) {
       const [topTracks, tracksFeatures] = await getTopTracks(spotifyApi)
       let tracks = []
